@@ -272,29 +272,45 @@ extension ViewController: WKUIDelegate {
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
         if (navigationAction.targetFrame == nil) {
             webView.load(navigationAction.request)
+            print(navigationAction.request)
         }
         return nil
     }
+    
     // restrict navigation to target host, open external links in 3rd party apps
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        if let requestUrl = navigationAction.request.url {
-            if let requestHost = requestUrl.host {
-                if (requestHost.range(of: allowedOrigin) != nil ) {
-                    decisionHandler(.allow)
-                } else {
-                    decisionHandler(.cancel)
-                    if (UIApplication.shared.canOpenURL(requestUrl)) {
-                        if #available(iOS 10.0, *) {
-                            UIApplication.shared.open(requestUrl)
-                        } else {
-                            // Fallback on earlier versions
-                            UIApplication.shared.openURL(requestUrl)
-                        }
-                    }
-                }
-            } else {
-                decisionHandler(.cancel)
-            }
+//    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+//        if let requestUrl = navigationAction.request.url {
+//            if let requestHost = requestUrl.host {
+//                if (requestHost.range(of: allowedOrigin) != nil ) {
+//                    decisionHandler(.allow)
+//                } else {
+//                    decisionHandler(.cancel)
+//                    if (UIApplication.shared.canOpenURL(requestUrl)) {
+//                        if #available(iOS 10.0, *) {
+//                            UIApplication.shared.open(requestUrl)
+//                        } else {
+//                            // Fallback on earlier versions
+//                            UIApplication.shared.openURL(requestUrl)
+//                        }
+//                    }
+//                }
+//            } else {  
+//                decisionHandler(.cancel)
+//            }
+//        }
+//    }
+    
+    func webView(webView: WKWebView, createWebViewWithConfiguration configuration: WKWebViewConfiguration, forNavigationAction navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        // A nil targetFrame means a new window (from Apple's doc)
+        if (navigationAction.targetFrame == nil) {
+            // Let's create a new webview on the fly with the provided configuration,
+            // set us as the UI delegate and return the handle to the parent webview
+            let popup = WKWebView(frame: self.view.frame, configuration: configuration)
+            popup.uiDelegate = self
+            self.view.addSubview(popup)
+            return popup
         }
+        return nil;
     }
+    
 }
